@@ -1,29 +1,43 @@
+from typing import List, Dict
 import streamlit as st
 from mistralai import Mistral
 model = "pixtral-12b-2409"
 system_message = "Ты виртуальный ассистент, твоя задача отвечать на вопросы пользователей и быть дружелюбным."
 
 
-def add_background():
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-image: url("https://your-image-url.com/background.jpg");
-            background-size: cover;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+chat_css = """
+<style>
+.chat-container {
+    display: flex;
+    flex-direction: column;
+}
+.user-message {
+    background-color: #DCF8C6;
+    align-self: flex-start;
+    padding: 10px;
+    border-radius: 10px;
+    margin: 5px;
+    max-width: 60%;
+}
+.bot-message {
+    background-color: #F1F0F0;
+    align-self: flex-end;
+    padding: 10px;
+    border-radius: 10px;
+    margin: 5px;
+    max-width: 60%;
+}
+</style>
+"""
 
+st.markdown(chat_css, unsafe_allow_html=True)
 
 api_key = st.secrets['MISTRAL_API_KEY']
 
 client = Mistral(api_key=api_key)
 
 
-def chat(user_message: str):
+def chat(chat_history: List[Dict]) -> str:
     messages = [
         {
             "role": "system",
@@ -33,27 +47,22 @@ def chat(user_message: str):
                     "text": system_message
                 }
             ]
-        },
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": user_message
-                }
-            ]
         }
     ]
+    messages += chat_history
     chat_response = client.chat.complete(
         model=model,
         messages=messages
     )
-    return chat_response.choices[0].message.content
+    st.session_state["chat_history"].append(
+        {"role": "ai", "content": [
+            {"type": "text",
+             "text": chat_response.choices[0].message.content}
+        ]})
 
 
 def main():
     # Добавляем фон
-    add_background()
 
     # Заголовок страницы
     st.title("Мультимодальный RAG - Интерфейс")
@@ -78,8 +87,24 @@ def main():
     # Поле для ввода запроса
     st.header("Введите запрос для мультимодального поиска")
     query = st.text_input("Ваш вопрос")
-    answer = chat(query)
-    st.write(answer)
+    if st.button("Отправить"):
+        if query:
+            st.session_state["chat_history"].append(
+                {"role": "user", "content": [
+                    {"type": "text",
+                     "text": query}
+                ]})
+            chat(st.session_state["chat_history"])
+
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    for msg in st.session_state["chat_history"]:
+        if msg["role"] == "user":
+            st.markdown(
+                f'<div class="user-message">{msg["content"]["text"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(
+                f'<div class="bot-message">{msg["content"]["text"]}</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # Запуск приложения
