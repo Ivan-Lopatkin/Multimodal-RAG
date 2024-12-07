@@ -36,6 +36,9 @@ api_key = st.secrets['MISTRAL_API_KEY']
 
 client = Mistral(api_key=api_key)
 
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+
 
 def chat(chat_history: List[Dict]) -> str:
     messages = [
@@ -62,21 +65,16 @@ def chat(chat_history: List[Dict]) -> str:
 
 
 def main():
-    # Добавляем фон
 
-    # Заголовок страницы
     st.title("Мультимодальный RAG - Интерфейс")
 
-    # Сайдбар с описанием
     st.sidebar.header("Мультимодальный RAG")
     st.sidebar.text("Загрузите файлы и введите запрос для поиска.")
 
-    # Загрузка файлов
     st.header("Загрузите файлы для индексации")
     uploaded_files = st.file_uploader(
         "Выберите файлы (PDF, DOCX, изображения)", accept_multiple_files=True)
 
-    # Проверка, загружены ли файлы
     if uploaded_files:
         st.write("Вы загрузили следующие файлы:")
         for file in uploaded_files:
@@ -84,7 +82,6 @@ def main():
     else:
         st.write("Пожалуйста, загрузите файлы для индексации.")
 
-    # Поле для ввода запроса
     st.header("Введите запрос для мультимодального поиска")
     query = st.text_input("Ваш вопрос")
     if st.button("Отправить"):
@@ -107,6 +104,5 @@ def main():
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-# Запуск приложения
 if __name__ == "__main__":
     main()
