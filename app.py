@@ -97,10 +97,10 @@ def main():
     for msg in st.session_state["chat_history"]:
         if msg["role"] == "user":
             st.markdown(
-                f'<div class="user-message">{msg["content"]["text"]}</div>', unsafe_allow_html=True)
+                f'<div class="user-message">{msg["content"][0]["text"]} < /div >', unsafe_allow_html=True)
         else:
             st.markdown(
-                f'<div class="bot-message">{msg["content"]["text"]}</div>', unsafe_allow_html=True)
+                f'<div class="bot-message">{msg["content"][0]["text"]}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 
