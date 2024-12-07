@@ -10,25 +10,32 @@ chat_css = """
 .chat-container {
     display: flex;
     flex-direction: column;
+    gap: 10px;
 }
 .user-message {
-    background-color: #DCF8C6;
+    background-color: #e8f5e9; /* Светло-зеленый фон */
+    color: #1b5e20; /* Темно-зеленый текст */
     align-self: flex-start;
     padding: 10px;
     border-radius: 10px;
     margin: 5px;
     max-width: 60%;
+    font-size: 16px;
 }
 .bot-message {
-    background-color: #F1F0F0;
+    background-color: #e3f2fd; /* Светло-голубой фон */
+    color: #0d47a1; /* Темно-синий текст */
     align-self: flex-end;
     padding: 10px;
     border-radius: 10px;
     margin: 5px;
     max-width: 60%;
+    font-size: 16px;
+    font-style: italic;
 }
 </style>
 """
+
 
 st.markdown(chat_css, unsafe_allow_html=True)
 
