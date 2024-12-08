@@ -75,9 +75,10 @@ def main():
                     {"type": "text",
                      "text": query}
                 ]})
-            retrieved_documents = retrieve_pipe.retrieve(
+            images = retrieve_pipe.retrieve(
+                query,
                 strategy="Intersection")
-            answer = chat(st.session_state["chat_history"])
+            answer = chat(st.session_state["chat_history"], images)
             st.session_state['chat_history'].append(
                 {
                     "role": "assistant",
