@@ -28,29 +28,34 @@
 
 Для запуска проекта необходимо выполнить следующие шаги:
 
-
-1. **Создайте и активируйте виртуальное окружение:**
-
+1. **Установка poppler**
+    ```bash
+   !sudo apt-get install -y poppler-utils
+   ```
+    
+2. **Создайте и активируйте виртуальное окружение:**
+  
     ```bash
     python3 -m venv venv
     source venv/bin/activate
     ```
-
-2. **Установите зависимости:**
+  
+3. **Установите зависимости:**
 
     ```bash
+    
     pip install torch --index-url https://download.pytorch.org/whl/cu124
 
     pip install -r requirements.txt
     ```
 
-3. **Запустите приложение:**
+4. **Запустите приложение:**
 
     ```bash
     streamlit run app.py
     ```
 
-4. **Доступ к приложению:**
+6. **Доступ к приложению:**
 
     Откройте веб-браузер и перейдите по адресу `http://localhost:8000`.
 
