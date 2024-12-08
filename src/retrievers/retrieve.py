@@ -86,6 +86,8 @@ class BGERetriever:
 
         with open("data/index_BGE/docs_meta.json", "w", encoding="utf-8") as f:
             json.dump(self.meta, f, ensure_ascii=False)
+
+        faiss.write_index(self.faiss_index, 'data/index_BGE/faiss_index.bin')
         
 
 
