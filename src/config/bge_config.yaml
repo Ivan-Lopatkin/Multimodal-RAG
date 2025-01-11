@@ -1,0 +1,4 @@
+model_name: BAAI/bge-m3
+faiss_path: data/index_BGE/faiss_index.bin
+metadata_path: data/index_BGE/docs_meta.json
+images_path: data/images
