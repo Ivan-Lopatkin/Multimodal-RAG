@@ -4,6 +4,14 @@ from dotenv import load_dotenv
 import streamlit as st
 from src.llm import chat
 from src.retrievers import RetrievePipeline
+from src.utils import pdf_to_images
+import torch
+
+SAVE_DIR = "data/pdf_files"
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,7 +23,7 @@ logger = logging.getLogger(__name__)
 system_message = "Ты виртуальный ассистент, твоя задача отвечать на вопросы пользователей и быть дружелюбным."
 
 load_dotenv()
-retrieve_pipe = RetrievePipeline()
+retrieve_pipe = RetrievePipeline(device=device)
 
 chat_css = """
 <style>
@@ -50,95 +58,93 @@ chat_css = """
 
 st.markdown(chat_css, unsafe_allow_html=True)
 
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
-def initialize_session():
-    """Инициализация сессии и очистка контекста при необходимости."""
-    if "chat_history" not in st.session_state:
-        st.session_state["chat_history"] = []
-        logger.info("Инициализация состояния чата.")
+if "answered" not in st.session_state:
+    st.session_state["answered"] = True
 
-    if st.button("Очистить контекст"):
-        st.session_state["chat_history"] = []
-        logger.info("Контекст чата был очищен пользователем.")
+def main():
 
+    st.title("Мультимодальный RAG - Интерфейс")
 
-def display_upload_section():
-    """Отображение секции загрузки файлов."""
-    st.header("Загрузите файлы для индексации")
-    uploaded_files = st.file_uploader(
-        "Выберите файлы (PDF, DOCX, изображения)", accept_multiple_files=True
+    # Sidebar для загрузки файлов и выбора стратегии
+    with st.sidebar.form("Загрузка файлов", clear_on_submit=True):
+        uploaded_files = st.sidebar.file_uploader(
+            "Выберите PDF-файлы", accept_multiple_files=True
+        )
+
+        submitted = st.form_submit_button("Рассчитать эмбеддинги загруженных файлов")
+
+        if submitted and uploaded_files:
+            st.sidebar.write("Вы загрузили следующие файлы:")
+            for file in uploaded_files:
+                st.sidebar.write(f"- {file.name}")
+                
+                with open(SAVE_DIR + '/' + file.name, "wb") as f:
+                    f.write(file.getbuffer())
+
+                
+                pdf_to_images(SAVE_DIR + '/' + file.name)
+                retrieve_pipe.add_to_index(SAVE_DIR + '/' + file.name)
+                
+
+                    
+            # st.sidebar.success(f"Файлы сохранены в папку {SAVE_DIR}.")
+        else:
+            st.sidebar.write("Пожалуйста, загрузите файлы для индексации.")
+
+    # Меню выбора стратегии
+    st.sidebar.header("Выбор стратегии")
+    strategy = st.sidebar.selectbox(
+        "Выберите стратегию поиска:",
+        ["SummaryEmb", "ColQwen", "ColQwen+SummaryEmb"]
     )
 
-    if uploaded_files:
-        st.write("Вы загрузили следующие файлы:")
-        for file in uploaded_files:
-            st.write(f"- {file.name}")
-        logger.info(f"Пользователь загрузил файлы: {[f.name for f in uploaded_files]}")
-    else:
-        st.write("Пожалуйста, загрузите файлы для индексации.")
-        logger.info("Файлы не были загружены.")
+    # Отображение чата
 
-    return uploaded_files
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            if message["role"] == 'user':
+                st.markdown(message["content"])
+            else:
+                st.markdown('Релевантные изображения по запросу:')
+                for image in message["content"][1]:
+                    st.image(image, caption="Релевантное изображение", use_container_width=True)
+                st.markdown('Ответ:\n' + message["content"][0])
 
+    # React to user input
+    if (query := st.chat_input("Введите запрос для мультимодального поиска")) and st.session_state["answered"]:
+        
+        st.session_state["answered"] = False
 
-def display_query_section():
-    """Отображение секции ввода запроса и обработка ответа."""
-    st.header("Введите запрос для мультимодального поиска")
-    query = st.text_input("Ваш вопрос")
-    if st.button("Отправить"):
-        logger.info(f"Пользователь отправил запрос: {query}")
-        if query:
-            # Добавление запроса в историю
-            st.session_state["chat_history"].append(
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": query
-                        }
-                    ]
-                }
-            )
-            # Получение связанных изображений
-            images = retrieve_pipe.retrieve(query, strategy="Intersection")
-            logger.info(f"Получены изображения для запроса: {query} - {images}")
+        # Display user message in chat message container
+        st.chat_message("user").markdown(query)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": query})
 
-            # Получение ответа от модели
-            answer = chat(st.session_state["chat_history"], images)
-            logger.info(f"Ответ от модели для запроса '{query}': {answer}")
+        images = retrieve_pipe.retrieve(
+                query,
+                strategy=strategy)
+        
+        structured_query = [
+                {"role": "user", "content": [
+                    {"type": "text",
+                     "text": query}
+                ]}]
+        
 
-            # Добавление ответа в историю
-            st.session_state['chat_history'].append(
-                {
-                    "role": "assistant",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": answer
-                        }
-                    ]
-                }
-            )
-        else:
-            logger.warning("Пользователь отправил пустой запрос.")
+        answer = chat(structured_query, images)
 
-
-def display_chat_history():
-    """Отображение истории чата."""
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    for msg in st.session_state["chat_history"]:
-        if msg["role"] == "user":
-            st.markdown(
-                f'<div class="user-message">{msg["content"][0]["text"]}</div>', 
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                f'<div class="bot-message">{msg["content"][0]["text"]}</div>', 
-                unsafe_allow_html=True
-            )
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            st.markdown('Релевантные изображения по запросу:')
+            for image in images:
+                st.image(image, caption="Релевантное изображение", use_container_width=True)
+            st.markdown('Ответ:\n' + answer)
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": (answer, images)})
+        st.session_state["answered"] = True
 
 
 def main():
