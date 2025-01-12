@@ -2,105 +2,107 @@
 
 ---
 
-## Структура репозитория
+## Repository Structure
 
 - `app.py`  
-  Основной файл приложения для запуска сервиса.
+  The main application file for launching the service.
 
 - `requirements.txt`  
-  Список зависимостей, необходимых для работы проекта.
+  A list of dependencies required for the project to work.
 
 - `data/`  
-  Директория с данными для индексирования и поиска.
+  Directory containing data for indexing and searching.
   
 - `src/`  
-  Исходный код проекта.
+  Project source code.
   - `llm/`  
-    Модули для работы с большими языковыми моделями.
+    Modules for working with large language models.
   - `retrievers/`  
-    Модули для извлечения релевантной информации.
+    Modules for extracting relevant information.
   - `utils.py`  
-    Вспомогательные функции и утилиты.
+    Helper functions and utilities.
 
 ---
 
-## Запуск
+## Running
 
-Для запуска проекта необходимо выполнить следующие шаги:
+To run the project, follow these steps:
 
-1. **Установка poppler**
+1. **Install poppler**
     ```bash
-   !sudo apt-get install -y poppler-utils
-   ```
+    !sudo apt-get install -y poppler-utils
+    ```
     
-2. **Создайте и активируйте виртуальное окружение:**
+2. **Create and activate a virtual environment:**
   
     ```bash
     python3 -m venv venv
     source venv/bin/activate
     ```
   
-3. **Установите зависимости:**
+3. **Install dependencies:**
 
     ```bash
-    
     pip install torch --index-url https://download.pytorch.org/whl/cu124
 
     pip install -r requirements.txt
     ```
-4.  **Добавьте .env в корень проекта, свяжитесь с нами, дадим ключик)  tg @umbilnm **
-4. **Запустите приложение:**
+4. **Add a `.env` file to the root of the project, contact us, we'll provide a key) tg @umbilnm**
 
+5. **Run the application:**
+    
     ```bash
     streamlit run app.py
     ```
-
-6. **Доступ к приложению:**
-
-    Откройте веб-браузер и перейдите по адресу `http://localhost:8000`.
-
----
-
-## Время сборки и запуска
-
-1. **Установка зависимостей:**  
-   - Занимает около **2 минут**.
-
-2. **Запуск приложения:**  
-   - Мгновенный запуск после установки зависимостей.
----
-
-## Обзор Решения
-
-Наш проект включает следующие ключевые компоненты:
-
-**Индексирование данных**
-- Использование **FAISS** для эффективного поиска по эмбеддингам.
-- Хранение метаданных и эмбеддингов для быстрого доступа.
-
-**Работа с LLM**
-- Интеграция с Pixtral-12b для генерации ответов.
-
-
-## Гипотеза: Совмещение текстовых и визуальных эмбеддингов для улучшения мультимодального поиска
-
-Основной гипотезой нашего решения является предположение, что комбинирование эмбеддингов текстовой и визуальной модальностей позволяет значительно улучшить точность и качество мультимодального поиска. Мы считаем, что интеграция данных из разных типов источников (текстовых описаний и изображений) обеспечивает более глубокое понимание контекста и повышает релевантность выдачи.
+    
+6. **Access the application:**
+    
+    Open a web browser and navigate to `http://localhost:8000`.
 
 ---
 
-### Наш подход: стратегии реализации гипотезы
+## Build and Launch Time
 
-Для проверки этой гипотезы мы разработали несколько стратегий, которые позволяют по-разному комбинировать текстовые и визуальные эмбеддинги. Каждая из них представляет собой часть общего подхода к решению задачи мультимодального поиска.
+1. **Installing dependencies:**  
+   - Takes about **2 minutes**.
+
+2. **Launching the application:**  
+   - Instant launch after installing dependencies.
+---
+
+## Solution Overview
+
+Our project includes the following key components:
+
+**Data Indexing**
+- Using **FAISS** for efficient embedding-based search.
+- Storing metadata and embeddings for quick access.
+
+**Working with LLM**
+- Integration with Pixtral-12b for generating responses.
+
+## Hypothesis: Combining Textual and Visual Embeddings to Enhance Multimodal Search
+
+The main hypothesis of our solution is the assumption that combining embeddings from textual and visual modalities significantly improves the accuracy and quality of multimodal search. We believe that integrating data from different types of sources (text descriptions and images) provides a deeper understanding of context and increases the relevance of the results.
+
+---
+
+### Our Approach: Strategies for Implementing the Hypothesis
+
+To test this hypothesis, we developed several strategies that allow for different combinations of textual and visual embeddings. Each of them represents a part of the overall approach to solving the multimodal search problem.
 
 #### 1. **SummaryEmb**
-Эта стратегия извлекает изображения, используя текстовые эмбеддинги, полученные из описаний (summary) изображений при помощи Pixtral-12b. Она помогает учитывать текстовый контекст изображений, но не задействует визуальную информацию напрямую.
+
+This strategy extracts images using textual embeddings obtained from image descriptions (summary) via Pixtral-12b. It helps account for the textual context of images but does not directly utilize visual information.
 
 #### 2. **ColQwen**
-Визуальные эмбеддинги, полученные через модель ViT, используются для извлечения изображений, релевантных запросу. Стратегия позволяет учитывать исключительно визуальные характеристики изображений.
+
+Visual embeddings obtained through the ViT model are used to extract images relevant to the query. This strategy allows for considering exclusively the visual characteristics of images.
 
 #### 3. **Intersection**
-В этой стратегии комбинируются результаты двух модальностей через пересечение изображений, найденных текстовыми и визуальными эмбеддингами. Это позволяет учитывать и текстовую, и визуальную релевантность, что важно для мультимодальных запросов.
+
+This strategy combines the results of both modalities by intersecting images found by textual and visual embeddings. This allows for considering both textual and visual relevance, which is important for multimodal queries.
 
 #### 4. **ColQwen+SummaryEmb**
-Эта стратегия объединяет топовые результаты текстовых и визуальных эмбеддингов, выбирая наиболее релевантные изображения из обоих подходов. Она помогает эффективно решать задачи, где требуется мультимодальный анализ.
 
+This strategy combines the top results of textual and visual embeddings, selecting the most relevant images from both approaches. It helps effectively solve tasks that require multimodal analysis.
