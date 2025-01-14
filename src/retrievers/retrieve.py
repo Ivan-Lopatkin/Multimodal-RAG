@@ -105,7 +105,7 @@ class ColQwenRetriever:
     def retrieve(self, query: str, top_k: int = 2) -> List[str]:
         query_embedding = self.embed_queries(query)
         scores = self.processor.score_multi_vector(query_embedding, self.embeddings)
-        top_k_docs = scores.argsort(axis=1)[0][-top_k:]
+        top_k_docs = scores.argsort(axis=1)[0][-self.top_k :]
         top_k_docs = torch.flip(top_k_docs, dims=[0]).tolist()
         metas = [self.meta[i] for i in top_k_docs]
 
