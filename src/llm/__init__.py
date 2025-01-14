@@ -1,1 +1,1 @@
-from .chat import chat
+from .chat import chat, summarize_image
