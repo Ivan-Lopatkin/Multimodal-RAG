@@ -1,6 +1,7 @@
 import os
 
 import streamlit as st
+import torch
 from dotenv import load_dotenv
 
 from src.llm import chat
@@ -10,7 +11,11 @@ from src.utils import pdf_to_images
 SAVE_DIR = "data/pdf_files"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-device = "mps"
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available() else "cpu"
+)
 
 load_dotenv()
 

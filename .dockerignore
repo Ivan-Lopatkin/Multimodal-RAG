@@ -1,0 +1,6 @@
+.venv
+__pycache__
+data/
+colpali/
+notebooks/
+python3.11/
