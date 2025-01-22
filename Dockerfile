@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM nvidia/cuda:12.2.0-devel-ubuntu20.04
 
 WORKDIR /app
 
